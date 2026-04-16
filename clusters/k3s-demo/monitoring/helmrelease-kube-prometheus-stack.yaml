@@ -1,0 +1,81 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "72.x"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+  install:
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
+  values:
+    grafana:
+      adminPassword: "demo-grafana-2026"
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hosts:
+          - grafana.fanfuse.app
+        tls:
+          - secretName: grafana-fanfuse-tls
+            hosts:
+              - grafana.fanfuse.app
+      additionalDataSources:
+        - name: Tempo
+          type: tempo
+          url: http://tempo.monitoring:3100
+          access: proxy
+          isDefault: false
+          jsonData:
+            tracesToLogsV2:
+              datasourceUid: loki
+              filterByTraceID: true
+            tracesToMetrics:
+              datasourceUid: prometheus
+            serviceMap:
+              datasourceUid: prometheus
+            nodeGraph:
+              enabled: true
+        - name: Loki
+          type: loki
+          uid: loki
+          url: http://loki.monitoring:3100
+          access: proxy
+          isDefault: false
+          jsonData:
+            derivedFields:
+              - datasourceUid: tempo
+                matcherRegex: '"traceID":"(\w+)"'
+                name: TraceID
+                url: '$${__value.raw}'
+      sidecar:
+        dashboards:
+          enabled: true
+          searchNamespace: ALL
+    prometheus:
+      prometheusSpec:
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        retention: 7d
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            memory: 1Gi
+    alertmanager:
+      enabled: false
+    nodeExporter:
+      enabled: true
+    kubeStateMetrics:
+      enabled: true
