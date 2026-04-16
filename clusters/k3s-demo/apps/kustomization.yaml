@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - echo-service.yaml
+  - servicemonitor.yaml
