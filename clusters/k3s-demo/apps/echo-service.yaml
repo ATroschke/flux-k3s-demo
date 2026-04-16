@@ -47,6 +47,10 @@ metadata:
   namespace: apps
   labels:
     app: echo-service
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
 spec:
   selector:
     app: echo-service
@@ -79,19 +83,3 @@ spec:
     - secretName: echo-fanfuse-tls
       hosts:
         - echo.fanfuse.app
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: echo-service
-  namespace: apps
-  labels:
-    app: echo-service
-spec:
-  selector:
-    matchLabels:
-      app: echo-service
-  endpoints:
-    - port: http
-      path: /metrics
-      interval: 15s
