@@ -1,0 +1,33 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: weave-gitops
+  namespace: demo
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: weave-gitops
+      version: "4.0.36"
+      sourceRef:
+        kind: HelmRepository
+        name: weave-gitops
+  values:
+    adminUser:
+      create: true
+      username: admin
+      passwordHash: "$2a$10$gpGDf8Pnvc.yOijKM4s29uAD5ThdH54ZhZ.KXs1E5sbeQWL3smRTq"
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      hosts:
+        - host: demo.fanfuse.app
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: demo-fanfuse-tls
+          hosts:
+            - demo.fanfuse.app
