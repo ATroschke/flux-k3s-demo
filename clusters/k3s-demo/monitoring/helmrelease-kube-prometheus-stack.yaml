@@ -33,7 +33,7 @@ spec:
       additionalDataSources:
         - name: Tempo
           type: tempo
-          url: http://tempo.monitoring:3100
+          url: http://tempo.monitoring:3200
           access: proxy
           isDefault: false
           jsonData:
